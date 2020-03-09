@@ -91,4 +91,5 @@ That said, there are a couple of downsides to this approach. While it’s possib
 
 We are fortunate today to have many excellent database choices. While Relational databases are still the best choice for storing structured data, NoSQL databases are a good choice for managing semi-structured, unstructured, and graph data. If you have a data model with lot of connected data and want a database which is intuitive, fun, and fast you should get to know Neo4j.
 
-Sample CRUD application with Express+Neo4j is available in [github](http://github.com)
+Sample CRUD application with Express+Neo4j is available in [github](https://github.com/gulmoharnnt/ExpressNeo4jCRUD)
+
