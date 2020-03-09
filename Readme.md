@@ -3,7 +3,7 @@
 ### Method 1: Using Docker.
 
 1. Install Docker and Docker compose on your machine
-2. Get the code from [github](http://github.com)
+2. Get the code from [github](https://github.com/gulmoharnnt/ExpressNeo4jCRUD)
 3. Go to the project folder and run the command on command prompt
 
 
@@ -24,7 +24,7 @@
     service neo4j status
     ```
 
-2. Get the code from [github](http://github.com)
+2. Get the code from [github](https://github.com/gulmoharnnt/ExpressNeo4jCRUD)
 3. Go to the project folder and run the command on command prompt
 
 
