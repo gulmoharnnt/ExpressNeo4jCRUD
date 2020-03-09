@@ -1,0 +1,24 @@
+version: '3'
+services:
+  app:
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    ports:
+      - '7000:7000'
+    volumes:
+      - /app/node_modules
+      - ./:/app
+    environment:
+      - myenv_dbHost=bolt://neo4j-local:7687
+      - myenv_dbUser=neo4j
+      - myenv_dbPass=admin
+    links:
+      - neo4j-local
+  neo4j-local:
+    image: neo4j:3.5.14
+    ports:
+      - '7484:7474'
+      - '7687:7687'
+    volumes:
+      - $HOME/neo4j/data:/data

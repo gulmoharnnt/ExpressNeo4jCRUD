@@ -1,0 +1,42 @@
+{
+  "name": "ExpressNeo4jCRUD",
+  "version": "1.0.0",
+  "description": "Simple crud operation for user and friends relation between the node using express and neo4j graph db",
+  "Author": "Gulmohar",
+  "scripts": {
+    "precommit": "lint-staged",
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "config": "^3.3.0",
+    "express": "^4.17.1",
+    "express-async-errors": "^3.1.1",
+    "helmet": "^3.21.3",
+    "neo4j-driver": "^1.7.3",
+    "nodemon": "^2.0.2",
+    "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb": "^18.0.1",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-react": "^7.18.3",
+    "jest": "^25.1.0",
+    "lint-staged": "^10.0.8",
+    "prettier": "^1.19.1",
+    "supertest": "^4.0.2"
+  },
+  "lint-staged": {
+    "_.js": [
+      "eslint --fix",
+      "jest --bail --findRelatedTests",
+      "prettier --write",
+      "git add"
+    ]
+  }
+}
