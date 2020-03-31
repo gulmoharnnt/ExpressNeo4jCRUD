@@ -41,8 +41,11 @@
 
 ## STEP 2: Testing with Rest Client like postman
 
-- GET - localhost:7000/api/users/
-- POST - localhost:7000/api/users/
+1. To get the User List
+  - GET - localhost:7000/api/users/
+
+2. To add new User
+  - POST - localhost:7000/api/users/
   ```
   JSON Request :
   {
@@ -51,8 +54,11 @@
     "email: "User1@email.com"
   }
   ```
-- GET - localhost:7000/api/users/1
-- PATCH - localhost:7000/api/users/2
+3. To get particular user details
+  - GET - localhost:7000/api/users/1 
+
+4. To Update the user details 
+   - PATCH - localhost:7000/api/users/2
   ```
   JSON Request :
   {
@@ -60,9 +66,24 @@
     "email": "User2@email.com"
   }
   ```
-- DELETE - localhost:7000/api/users/2
+5. To delete the user
+  - DELETE - localhost:7000/api/users/2
+  
+6. To add user as friend
+  - POST - localhost:7000/api/friends/add
+  ```
+  JSON Request:
+  {
+    "source":1,
+    "destination":2
+  }
+  ```
 
-- POST - localhost:7000/api/friends/add
+7. To get the friend list
+  - GET - localhost:7000/api/friends/list/2
+
+8. To delete a friend from a list
+  - POST - localhost:7000/api/friends/delete
   ```
   JSON Request:
   {
@@ -70,12 +91,4 @@
     "destination":2
   }
   ```
-- GET - localhost:7000/api/friends/list/2
-- POST - localhost:7000/api/friends/delete
-  ```
-  JSON Request:
-  {
-    "source":1,
-    "destination":2
-  }
-  ```
+

@@ -1,95 +1,341 @@
-# REST Web-App Development Using Express and Neo4j
+# CRUD Operation Using ExpressJS and Neo4j
 
-When building a web application there are a lot of choices for the database which you will put on the bottom of the stack. As the source of truth you want to use a database which is dependable certainly, but which also allows you to model your data well. In this article, I’ll discuss why Neo4j is a good choice as your web application stack’s foundation if your data model contains lot of connected data and relationships.
+I will write a simple CRUD services Web-app by using ExpressJS and Neo4j as a persistence data store.
 
-## What is Neo4j?
+## ExpressJS
 
-![Figure 1. Neo4j Web Console](img_1.png)
+ExpressJS is a server-side web framework for NodeJS. It builds on the top of NodeJS. One of the important strength of ExpressJS is, it makes routing very easy. Furthermore, it is the most popular web framework in NodeJS world.
 
-Neo4j is a Graph database which means, simply, that rather than data being stored in tables or collections it is stored as nodes and relationships between nodes. In Neo4j both nodes and relationships can contain properties with values. In addition:
+## Neo4j
 
-- Nodes can have zero or more **labels** (like Author or Book)
-- Relationships have exactly one **type** (like WROTE or FRIEND_OF)
-- Relationships are always directed from one node to another (but can be queried regardless of direction)
-
-## Why Neo4j?
-
-To start thinking about choosing a database for a web application we should consider what it is that we want. Top criteria include:
-
-- Is it easy to use?
-- Will it let you easily respond to changes in requirements?
-- Is it capable of high performance queries?
-- Does it allow for easy data modelling?
-- Is it transactional?
-- Does in scale?
-- Is it fun (sadly an often overlooked quality in a database)?
-
-In this respect Neo4j fits the bill nicely. Neo4j...
-
-- Has its own easy-to-learn query language (called **_Cypher_**)
-- Is schema-less, which allows it to be whatever you want it to be
-- Can perform queries on highly related data (graph data) much faster than traditional databases
-- Has an entity and relationship structure which naturally fits human intuition
-- Supports ACID-compliant transactions
-- Has a High Availability mode for query throughput scaling, backups, data locality, and redundancy.
-- Has a visual query console which is hard to get tired of
-
-## When to not use Neo4j?
-
-While Neo4j, as a Graph NoSQL database, has a lot to offer, no solution can be perfect. Some use cases where Neo4j isn’t as good of a fit:
-
-- Recording large amounts of event-based data (such as log entries or sensor data)
-- Large scale distributed data processing like with Hadoop
-- Binary data storage
-- Structured data that’s a good candidate to be stored in a relational database
-
-In the example above you can see a graph of Authors, Cities, Books, and Categories as well as the relationships that tie them together. If you wanted to use Cypher to show that result in the Neo4j web console you could execute the following:
+Neo4j is a graph database management system developed by Neo4j, Inc. Described by its developers as an ACID-compliant transactional database with native graph storage and processing¹. It supports Cypher Query Language (CQL) to manipulate data in graph database. For this article, I will use docker to run neo4j instance.
 
 ```
-MATCH
-(city:City)<-[:LIVES_IN]-(:Author)-[:WROTE]->
-(book:Book)-[:HAS_CATEGORY]->(category:Category)
-WHERE city.name = “Chicago”
-RETURN \*
+docker run -p 7474:7474 -p 7687:7687 volume=$HOME/neo4j/data:/data neo4j
 ```
 
-Note the ASCII-art syntax showing nodes surrounded by parenthesis and an arrow representing the relationship pointing from one node to the other. This is Cypher’s way of allowing you to match a given subgraph pattern.
+## Use Case
 
-Of course Neo4j isn’t just about showing pretty graphs. If you wanted to count the categories of books by the location (city) of the author, you can use the same **MATCH** pattern and just return a different a set of columns, like so:
+For this use case, I will create a USER service that can insert, update, list and delete a User data. The data will be stored as a graph inside Neo4j. And Will create a FRIEND service to create a friend relation between two users
+
+### Step 1: Create Express App
+
+I will create an express app with name _expressneo4jcrud_. First, I need to install express-generator in order to install a wizard to create project setup.
 
 ```
-MATCH
-(city:City)<-[:LIVES_IN]-(:Author)-[:WROTE]->
-(book:Book)-[:HAS_CATEGORY]->(category:Category)
-RETURN city.name, category.name, COUNT(book)
+npm install express-generator -g
 ```
 
-That would return the following:
+We can create a directory outline just by typing:
 
-| city.name | category.name | COUNT(category) |
-| --------- | ------------- | --------------- |
-| Chicago   | Fantasy       | 1               |
-| Chicago   | Non-Fiction   | 2               |
+```
+express --view=ejs expressneo4jcrud
+```
 
-While Neo4j can handle "big data" it isn't Hadoop, HBase or Cassandra and you won't typically be crunching massive (petabyte) analytics directly in your Neo4j database. But when you are interested in serving up information about an entity and its data neighborhood (like you would when generating a web-page or an API result) it is a great choice. From simple CRUD access to a complicated, deeply nested view of a resource.
+It will generate files and folders that are necessary for express to run. Then type
 
-**Which stack should you use with Neo4j?**
+```
+cd expressneo4jcrud && npm install
+npm start
+```
 
-All major programming languages have support for Neo4j via the HTTP API, either via a basic HTTP library or via a number of native libraries which offer higher level abstractions. Also, since Neo4j is written in Java, all languages which have a JVM interface can take advantage of the high-performance APIs in Neo4j.
+Open a browser http://localhost:3000 to validate that your express is up and running.
 
-Neo4j also has its own “stack” to allow to you choose different access methods ranging from easy access to raw performance. It offers:
+### Step 2: Installing Modules
 
-- A HTTP API for making Cypher queries and retrieving results in JSON
-- An "unmanaged extension" facility in which you can write your own endpoints for your Neo4j database
-- A Java API for specifying traversals of nodes and relationships at a higher level
-- A low level batch-loading API for massive initial data ingestion
-- A core Java API for direct access to nodes and relationships for maximum performance
+There are some modules that are necessary in order to make our service run based on its functionalities. For example, neo4j-driver module for database driver. There are many more modules to be installed.
 
-Traditionally in a decently sized web application a number of database calls are needed to populate the HTTP response. Even if you can execute queries in parallel, it is often necessary to get the results of one query before you can make a second to get related data. In SQL you can generate complicated and expensive joins on tables to get results from many tables in one query, but anybody who has done more than a couple of SQL joins in the same query knows how quickly that can get complicated. Not to mention that the database still needs to do table or index scans to get the associated data. In Neo4j, retrieving entities via relationships uses pointers directly to the related nodes so that the server can traverse right to where it needs to go.
+```
+npm install compression config express express-async-errors helmet neo4j-driver nodemon winston --save
 
-That said, there are a couple of downsides to this approach. While it’s possible to retrieve all of the data required in one query, the query is quite long. I haven’t yet found a way to modularize it for reuse. Along the same lines: we might want to use this same endpoint in another place but show some more information about the related Gists. We could modify the query to return that data but then it would be returning unnecessary data for the original use case.
+npm install jest supertest eslint eslint-config-airbnb eslint-config-prettier eslint-plugin-import eslint-plugin-prettier eslint-plugin-react lint-staged prettier --save-dev
+```
 
-We are fortunate today to have many excellent database choices. While Relational databases are still the best choice for storing structured data, NoSQL databases are a good choice for managing semi-structured, unstructured, and graph data. If you have a data model with lot of connected data and want a database which is intuitive, fun, and fast you should get to know Neo4j.
+### Step 3: Setup Configuration Variables
 
-Sample CRUD application with Express+Neo4j is available in [github](https://github.com/gulmoharnnt/ExpressNeo4jCRUD)
+We are using the _config_ npm package to configure our DB connection or other environment variables. Setup the configuration file to configure database connection parameters and several initial values.
 
+```
+// file: config/development.json
+{
+  "dbHost": "bolt://localhost:7687",
+  "dbUser": "neo4j",
+  "dbPass": "admin"
+}
+
+```
+
+### Step 4: Database Connection Utility
+
+For getting database session easier, I will create a utility file for database connectivity.
+
+```
+// file: startup/config.js
+
+const config = require('config');
+
+module.exports = function() {
+  if (!config.get('dbHost')) {
+    throw new Error('FATAL ERROR: dbHost is not defined.');
+  }
+};
+
+```
+
+### Step 5: Model
+
+Now create a model as a persistence layer to graph database.
+
+```
+// file: middleware/graphDBConnect.js
+const neo4j = require('neo4j-driver').v1;
+const config = require('config');
+
+const uri = config.get('dbHost');
+const user = config.get('dbUser');
+const password = config.get('dbPass');
+
+const driver = neo4j.driver(uri, neo4j.auth.basic(user, password), {
+  maxConnectionLifetime: 3 * 60 * 60 * 1000, // 3 hours
+  maxConnectionPoolSize: 50,
+  connectionAcquisitionTimeout: 2 * 60 * 1000, // 120 seconds
+  disableLosslessIntegers: true
+});
+
+const session = driver.session();
+
+async function executeCypherQuery(statement, params = {}) {
+  try {
+    const result = session.run(statement, params);
+    session.close();
+    return result;
+  } catch (error) {
+    throw error; // we are logging this error at the time of calling this method
+  }
+}
+
+module.exports = { executeCypherQuery };
+```
+
+### Step 6: Routes
+
+Create a router.js file in startup folder to include all the routes.
+
+```
+// startup/routes.js
+const express = require('express');
+const users = require('../routes/users');
+const friends = require('../routes/friends');
+const error = require('../middleware/error');
+
+module.exports = function(app) {
+  app.use(express.json());
+  app.use('/api/users', users);
+  app.use('/api/friends', friends);
+  app.use(error);
+};
+
+```
+
+Create a function to Users route service endpoint.
+
+```
+// routes/users.js
+const express = require('express');
+const router = express.Router();
+const graphDBConnect = require('../middleware/graphDBConnect');
+
+function formatResponse(resultObj) {
+  const result = [];
+  if (resultObj.records.length > 0) {
+    resultObj.records.map(record => {
+      result.push(record._fields[0].properties);
+    });
+  }
+  return result;
+}
+
+router.post('/', async function(req, res) {
+  const { id, name, email } = req.body;
+  if (!id || id < 1 || !name || !email) {
+    return res.status(400).send('Invalid Inputs');
+  }
+
+  const query = `CREATE (n:Users {id:$id, name:$name, email: $email}) RETURN n`;
+  const params = {
+    id: parseInt(id),
+    name,
+    email
+  };
+  const resultObj = await graphDBConnect.executeCypherQuery(query, params);
+  const result = formatResponse(resultObj);
+  res.send(result);
+});
+router.get('/', async function(req, res) {
+  const query = 'MATCH (n:Users) RETURN n LIMIT 100';
+  const params = {};
+  const resultObj = await graphDBConnect.executeCypherQuery(query, params);
+  const result = formatResponse(resultObj);
+  res.send(result);
+});
+
+router.get('/:id', async function(req, res) {
+  const { id } = req.params;
+  const query = 'MATCH (n:Users {id: $id}) RETURN n LIMIT 100';
+  const params = { id: parseInt(id) };
+  const resultObj = await graphDBConnect.executeCypherQuery(query, params);
+  const result = formatResponse(resultObj);
+  res.send(result);
+});
+router.patch('/:id', async function(req, res) {
+  const { id } = req.params;
+  const { name, email } = req.body;
+  let strName = name ? ` n.name = '${name}' ` : '';
+  let strEmail = email ? ` n.email = '${email}' ` : '';
+  if (strName && strEmail) {
+    strEmail = ',' + strEmail;
+  }
+
+  const query = `MATCH (n:Users {id: $id}) SET ${strName} ${strEmail} RETURN n`;
+  const params = { id: parseInt(id) };
+  const resultObj = await graphDBConnect.executeCypherQuery(query, params);
+  const result = formatResponse(resultObj);
+  res.send(result);
+});
+router.delete('/:id', async function(req, res) {
+  const { id } = req.params;
+  const query = 'MATCH (n:Users {id: $id}) DELETE n';
+  const params = { id: parseInt(id) };
+  const resultObj = await graphDBConnect.executeCypherQuery(query, params);
+  res.send('Delete success');
+});
+
+module.exports = router;
+
+```
+
+Create a function to Friends route service endpoint.
+
+```
+// routes/friends.js
+const express = require('express');
+const router = express.Router();
+const graphDBConnect = require('../middleware/graphDBConnect');
+
+function formatResponse(resultObj) {
+  const result = [];
+  if (resultObj.records.length > 0) {
+    resultObj.records.map(record => {
+      result.push(record._fields[0].properties);
+    });
+  }
+  return result;
+}
+
+router.post('/add', async (req, res) => {
+  const { source, destination } = req.body;
+  if (!source || source < 1 || !destination || destination < 1) {
+    return res.status(400).send('Invalid Inputs');
+  }
+
+  const query = `MATCH (n:Users {id:$source}), (f:Users {id:$destination}) CREATE (n)-[:FRIEND]->(f) RETURN n`;
+  const params = {
+    source,
+    destination
+  };
+  const resultObj = await graphDBConnect.executeCypherQuery(query, params);
+  const result = formatResponse(resultObj);
+  res.send('Friends relation created successfully');
+});
+
+router.get('/list/:id', async (req, res) => {
+  const { id } = req.params;
+  const query = 'MATCH (n:Users {id: $id})-[:FRIEND]-(f) RETURN f LIMIT 100';
+  const params = { id: parseInt(id) };
+  const resultObj = await graphDBConnect.executeCypherQuery(query, params);
+  const result = formatResponse(resultObj);
+  res.send(result);
+});
+
+router.post('/delete', async (req, res) => {
+  const { source, destination } = req.body;
+  if (!source || source < 1 || !destination || destination < 1) {
+    return res.status(400).send('Invalid Inputs');
+  }
+  const query =
+    'MATCH (n:Users {id:$source})-[r:FRIEND]-(f:Users {id:$destination}) DELETE r';
+  const params = {
+    source,
+    destination
+  };
+  const resultObj = await graphDBConnect.executeCypherQuery(query, params);
+  const result = formatResponse(resultObj);
+  res.send('Friends relation deleted successfully');
+});
+
+module.exports = router;
+
+```
+
+### Step 7: Error Logging
+
+For logging we are using _winston_ package. We log all the errors in a file
+
+```
+// startup/logging.js
+const winston = require('winston');
+require('express-async-errors');
+
+module.exports = function() {
+  winston.exceptions.handle(
+    new winston.transports.Console({ colorize: true, prettyPrint: true }),
+    new winston.transports.File({ filename: 'uncaughtExceptions.log' })
+  );
+
+  process.on('unhandledRejection', ex => {
+    throw ex;
+  });
+
+  winston.add(
+    new winston.transports.File({
+      filename: 'logfile.log',
+      handleExceptions: true
+    })
+  );
+};
+
+```
+
+### Step 8: app.js
+
+And add the router to app.js
+
+```
+const express = require('express');
+const winston = require('winston');
+
+const app = express();
+
+require('./startup/logging')();
+require('./startup/routes')(app);
+require('./startup/config')();
+
+const port = 7000;
+const server = app.listen(port, () => winston.info(`Listening on port ${port}...`));
+
+module.exports = server;
+
+```
+
+### Step 9: Execute and Run
+
+```
+npm run dev
+```
+
+Open a browser http://localhost:7000 to validate that your express is still up and running.
+Now you can test the API's using any rest client like postman.
+
+### Sample Code
+
+That’s from me now. You can see complete source code, on my [github](https://github.com/gulmoharnnt/ExpressNeo4jCRUD).
