@@ -20,7 +20,7 @@ router.post('/', async function(req, res) {
 
   const query = `CREATE (n:Users {id:$id, name:$name, email: $email}) RETURN n`;
   const params = {
-    id: parseInt(id),
+    id: parseInt(id, 10),
     name,
     email
   };
@@ -38,7 +38,7 @@ router.get('/', async function(req, res) {
 router.get('/:id', async function(req, res) {
   const { id } = req.params;
   const query = 'MATCH (n:Users {id: $id}) RETURN n LIMIT 100';
-  const params = { id: parseInt(id) };
+  const params = { id: parseInt(id, 10) };
   const resultObj = await graphDBConnect.executeCypherQuery(query, params);
   const result = formatResponse(resultObj);
   res.send(result);
@@ -53,7 +53,7 @@ router.patch('/:id', async function(req, res) {
   }
 
   const query = `MATCH (n:Users {id: $id}) SET ${strName} ${strEmail} RETURN n`;
-  const params = { id: parseInt(id) };
+  const params = { id: parseInt(id, 10) };
   const resultObj = await graphDBConnect.executeCypherQuery(query, params);
   const result = formatResponse(resultObj);
   res.send(result);
@@ -61,7 +61,7 @@ router.patch('/:id', async function(req, res) {
 router.delete('/:id', async function(req, res) {
   const { id } = req.params;
   const query = 'MATCH (n:Users {id: $id}) DELETE n';
-  const params = { id: parseInt(id) };
+  const params = { id: parseInt(id, 10) };
   const resultObj = await graphDBConnect.executeCypherQuery(query, params);
   res.send('Delete success');
 });

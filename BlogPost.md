@@ -1,6 +1,6 @@
 # CRUD Operation Using ExpressJS and Neo4j
 
-I will write a simple CRUD services Web-app by using ExpressJS and Neo4j as a persistence data store.
+We will write a simple CRUD services Web-app by using ExpressJS and Neo4j as a persistence data store.
 
 ## ExpressJS
 
@@ -16,11 +16,11 @@ docker run -p 7474:7474 -p 7687:7687 volume=$HOME/neo4j/data:/data neo4j
 
 ## Use Case
 
-For this use case, I will create a USER service that can insert, update, list and delete a User data. The data will be stored as a graph inside Neo4j. And Will create a FRIEND service to create a friend relation between two users
+For this use case, we create a USER service that can insert, update, list and delete a User data. The data will be stored as a graph inside Neo4j. And Will create a FRIEND service to create a friend relation between two users
 
 ### Step 1: Create Express App
 
-I will create an express app with name _expressneo4jcrud_. First, I need to install express-generator in order to install a wizard to create project setup.
+We create an express app with name _expressneo4jcrud_. First, we need to install express-generator in order to install a wizard to create project setup.
 
 ```
 npm install express-generator -g
@@ -67,7 +67,7 @@ We are using the _config_ npm package to configure our DB connection or other en
 
 ### Step 4: Database Connection Utility
 
-For getting database session easier, I will create a utility file for database connectivity.
+For getting database session easier, create a utility file for database connectivity.
 
 ```
 // file: startup/config.js
@@ -339,3 +339,9 @@ Now you can test the API's using any rest client like postman.
 ### Sample Code
 
 That’s from me now. You can see complete source code, on my [github](https://github.com/gulmoharnnt/ExpressNeo4jCRUD).
+
+
+
+Below is the sample picture has two users represented as two nodes in the neo4j with friends relation.
+
+![neo4j-nodes](neo4j-nodes.png)

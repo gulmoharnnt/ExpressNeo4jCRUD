@@ -51,7 +51,7 @@
   {
     "id":1,
     "name": "User1",
-    "email: "User1@email.com"
+    "email": "User1@email.com"
   }
   ```
 3. To get particular user details
